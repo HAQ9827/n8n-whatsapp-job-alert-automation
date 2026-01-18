@@ -1,0 +1,839 @@
+{
+  "name": "Whatsapp interview saved from cloud dated 25/25",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        272
+      ],
+      "id": "de66a318-3e64-4d9f-85a1-100ed5468e17",
+      "name": "WhatsApp Trigger",
+      "webhookId": "216f2187-eb24-474a-8bb6-b7f60eb9d6dd",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "06ef14e3-1cca-45d3-a379-ac4f261a77f0",
+              "name": "text",
+              "value": "={{ $json.messages[0].text.body }}",
+              "type": "string"
+            },
+            {
+              "id": "ea2622e2-4d58-4365-a3a6-cc0592d8918c",
+              "name": "name",
+              "value": "={{ $json.contacts[0].profile.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1456,
+        272
+      ],
+      "id": "8a783024-47e4-41f6-b474-a66224213312",
+      "name": "text only prompt"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.messages[0].audio }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "20cb3a3e-64c3-4ae1-a301-036299a8c0a2"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "65d37d8b-955d-4ff8-800a-5b5fbfc10ccb",
+                    "leftValue": "={{ $json.messages[0].text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c691d847-1cbc-4299-b426-1754f6c7d6c0",
+                    "leftValue": "={{ $json.messages[0].document }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "pdf document"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -240,
+        256
+      ],
+      "id": "96371a78-476b-48fb-b8ba-1162f034a817",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "operation": "mediaUrlGet",
+        "mediaGetId": "={{ $json.messages[0].audio.id }}"
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        432,
+        80
+      ],
+      "id": "8fb7bb58-3c5c-428e-890d-e0e5aa1b2610",
+      "name": "Get Audio URL",
+      "webhookId": "820d46a4-21a3-44a3-9b6b-120e7c6fcd57"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        656,
+        80
+      ],
+      "id": "f37bad4b-b183-49e4-869a-464b6e59501e",
+      "name": "Download Audio"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "destinationKey": "base64",
+        "options": {
+          "keepSource": "both"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        944,
+        80
+      ],
+      "id": "75977bc0-472b-45df-8dcd-ea4c05150a8d",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googlePalmApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"Transcribe this audio\"\n        },\n        {\n          \"inlineData\": {\n            \"mimeType\": \"audio/{{ $binary.data.fileExtension }}\",\n            \"data\": {{ $json.base64.toJsonString() }}\n          }\n        }\n      ]\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1232,
+        80
+      ],
+      "id": "6bad2938-5b1d-4751-897d-f25f661e099e",
+      "name": "audio to text"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3af99d60-dd93-4e99-ad21-cec8bf340c48",
+              "name": "=text",
+              "value": "={{ $json.candidates[0].content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1456,
+        80
+      ],
+      "id": "a27de979-8eaa-4e35-b349-c7aa498afa5c",
+      "name": "Audio to text"
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "operation": "mediaUrlGet",
+        "mediaGetId": "={{ $json.messages[0].document.id }}"
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        208,
+        528
+      ],
+      "id": "11121b50-0a2e-4c3e-b2f3-4752b6027adc",
+      "name": "Download media",
+      "webhookId": "e2d6a55f-8174-4422-b540-699686afacef"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0be6c123-11ee-4872-ba9c-9f7dc8e91e9c",
+              "name": "messages[0].document.id",
+              "value": "={{ $json.messages[0].document.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -16,
+        528
+      ],
+      "id": "013d7b4e-5dd8-43c8-a8b0-d5f1818ade22",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        432,
+        528
+      ],
+      "id": "05c95ba0-70e8-48ed-8b40-cbed87eac06c",
+      "name": "Download Audio "
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        656,
+        528
+      ],
+      "id": "b6da99a4-a59e-45fa-a5cf-5c2dd5d65465",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "811819555339544",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.interview_response }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        2496,
+        272
+      ],
+      "id": "ddf5b35c-a045-4568-b62a-0ccfb39184d5",
+      "name": "interview send msg",
+      "webhookId": "bbf26aa3-ada3-424d-bcd1-e5c0787c0ffd"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an AI that extracts structured data from CVs.\n\n1. Extract the candidate's details (name, email, phone, LinkedIn, summary, skills, projects, education, certificates, languages, experience).\n2. Generate interview questions based on their skills and projects.\n3. Respond ONLY in valid JSON (no markdown, no extra text).\n\nExample format:\n{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"+1234567890\",\n  \"skills\": [\"React.js\", \"Node.js\", \"Python\"],\n  \"projects\": [\"E-commerce Platform\", \"Task Management App\"],\n  \"education\": {\"degree\": \"Bachelor's\", \"field\": \"Computer Science\"},\n  \"interview_questions\": [\n    \"Tell me about your experience with React.js\",\n    \"How did you implement the E-commerce Platform?\",\n    \"What challenges did you face in your Task Management App?\",\n    \"Describe your Python development experience\",\n    \"How do you approach problem-solving in development?\"\n  ]\n}\n\nNow extract and generate JSON from this CV text:\n{{ $json.text }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        528
+      ],
+      "id": "3af0e60b-2fc4-4c41-8f02-e827e9e5935e",
+      "name": "CV Processor Agent"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ae12e4f4-0df6-41f6-b345-09c41aed57ee",
+              "name": "Interview",
+              "value": "={{ $json.output }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": "=",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1232,
+        528
+      ],
+      "id": "4db587af-9b94-4472-862e-eaf9f76f75a9",
+      "name": "Set Interview Data"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"name\": \"string\",\n  \"email\": \"string\",\n  \"phone\": \"string\",\n  \"skills\": [\"string\"],\n  \"interview_questions\": [\"string\"]\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1024,
+        752
+      ],
+      "id": "fe8a4fd7-fb2b-420b-ad7c-6d4ee3299e93",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        896,
+        752
+      ],
+      "id": "0a50e132-e468-44f9-98c4-79af1bb21998",
+      "name": "Google Gemini Chat Model3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        496
+      ],
+      "id": "b17a7e21-7c74-4aeb-a1c2-8770cfad98f4",
+      "name": "Gemini Chat Model"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.text ? $json.text : 'Start interview' }}",
+        "options": {
+          "systemMessage": "=You are Sarah, a professional and friendly AI interviewer conducting a structured interview.\n\n## INTERVIEW PROCESS:\n1. **Introduction Phase**: Greet the candidate warmly and explain the process\n2. **Question Phase**: Ask ONE question at a time from the provided list\n3. **Follow-up Phase**: Provide natural follow-up questions or clarifications\n4. **Conclusion Phase**: Thank the candidate and provide next steps\n\n## CONVERSATION RULES:\n- Speak naturally like a human interviewer, not like a bot\n- Ask ONLY ONE question at a time and wait for response\n- Provide encouraging feedback (\"That's interesting...\", \"I see...\")\n- Keep track of which questions you've asked\n- When all questions are covered, conclude professionally\n- Memory has been provided to you to keep the flow smooth.\n\n## CANDIDATE INFORMATION:\nGet Name , Email , Skills from Supabase using get Cvs\n\n## INTERVIEW QUESTIONS TO COVER:\nget interview questions from supabase using -> Get Cvs \n\n## INTERVIEW STATES:\n- If this is the first message: Introduce yourself and ask if they're ready\n- If questions remain: Ask the next unasked question\n- If all questions covered: Conclude with thanks and next steps\n\n## CONCLUSION MESSAGE:\n\"Thank you for taking the time to speak with me today, {{ $json.name }}. You've provided some great insights about your experience and skills. We'll review your responses and get back to you within the next 3-5 business days with our decision.\"\n\n#DO NOT REPLY AFTER THIS CONCLUSION MESSAGE EVEN AFTER RECIEVING A REPLY!\n\nIMPORTANT THINGS TO REMEMBER EACH EXECUTION:\nYou need to remember Interview Questions and Interviewee name and save it in memory for each run. you must do this no matter what\n\nCurrent timestamp: {{ $now.format('MMMM Do YYYY, h:mm A') }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1808,
+        272
+      ],
+      "id": "db2f24fd-2ce7-4e3c-b7a6-87a68a1c6e5e",
+      "name": "Interview Conductor"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "response-assignment",
+              "name": "interview_response",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "timestamp-assignment",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2272,
+        272
+      ],
+      "id": "c4b815b4-e77c-4c97-a714-f88cd9d0d17b",
+      "name": "Format Response"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}",
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1808,
+        496
+      ],
+      "id": "bcddbd52-0c53-4c9d-8c3e-a58d69efde11",
+      "name": "Postgres Chat Memory"
+    },
+    {
+      "parameters": {
+        "tableId": "cv_data",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "session_id",
+              "fieldValue": "={{ $json.Interview.phone.replace(/[\\+\\-\\s]/g, '') }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.Interview.name }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $json.Interview.email }}"
+            },
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ $json.Interview.phone.replace(/[\\+\\-\\s]/g, '') }}"
+            },
+            {
+              "fieldId": "skills",
+              "fieldValue": "={{ $json.Interview.skills }}"
+            },
+            {
+              "fieldId": "interview_questions",
+              "fieldValue": "={{ $json.Interview.interview_questions }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        528
+      ],
+      "id": "fd2e0e7b-97e1-4781-b7a0-466028486e1b",
+      "name": "Create a row"
+    },
+    {
+      "parameters": {
+        "useCustomSchema": true,
+        "operation": "get",
+        "tableId": "cv_data",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        1936,
+        496
+      ],
+      "id": "ae2c4e13-b8bc-41eb-96c6-75f6da73472a",
+      "name": "Get CVs"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "n8n_chat_histories",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_id",
+              "keyValue": "={{ $('WhatsApp Trigger').item.json.contacts[0].wa_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        2064,
+        496
+      ],
+      "id": "3ccffd2b-5880-4558-bdc1-04c78a6b38c1",
+      "name": "Get chat_history"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "text only prompt": {
+      "main": [
+        [
+          {
+            "node": "Interview Conductor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get Audio URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "text only prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Audio URL": {
+      "main": [
+        [
+          {
+            "node": "Download Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Audio": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "audio to text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "audio to text": {
+      "main": [
+        [
+          {
+            "node": "Audio to text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audio to text": {
+      "main": [
+        [
+          {
+            "node": "Interview Conductor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download media": {
+      "main": [
+        [
+          {
+            "node": "Download Audio ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Download media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Audio ": {
+      "main": [
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "CV Processor Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CV Processor Agent": {
+      "main": [
+        [
+          {
+            "node": "Set Interview Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Interview Data": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "CV Processor Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "CV Processor Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Interview Conductor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interview Conductor": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "interview send msg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Interview Conductor",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Interview Conductor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get CVs": {
+      "ai_tool": [
+        [
+          {
+            "node": "Interview Conductor",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get chat_history": {
+      "ai_tool": [
+        [
+          {
+            "node": "Interview Conductor",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7136d089-5ebe-46c8-84ed-90e0b3d87a77",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0d3b8b3f3ce1cb62e8cc7004f21ad4746a86991e87993e63c69b40caaab58f89"
+  },
+  "id": "dTfvqfJKSWlRN8SK",
+  "tags": []
+}
