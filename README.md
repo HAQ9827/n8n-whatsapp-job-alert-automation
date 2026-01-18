@@ -7,6 +7,10 @@ Automate your recruitment process with AI-powered WhatsApp interviews using n8n,
 ![Google Gemini](https://img.shields.io/badge/Google-Gemini%202.0-4285F4?style=flat-square)
 ![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?style=flat-square)
 
+## Workflow Overview
+![n8n Workflow](workflow-overview.png)
+
+
 ## Table of Contents
 
 - [About](#about)
